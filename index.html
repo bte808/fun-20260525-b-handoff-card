@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Handoff Card</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Local-first utility</p>
+        <h1>Handoff Card</h1>
+      </div>
+      <p id="status" aria-live="polite">Local only. Nothing leaves this browser.</p>
+    </header>
+
+    <main class="workspace">
+      <section class="panel input-panel" aria-labelledby="input-title">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Paste</p>
+            <h2 id="input-title">Messy notes</h2>
+          </div>
+          <label class="mode">
+            <span>Mode</span>
+            <select id="mode">
+              <option value="work">Work</option>
+              <option value="study">Study</option>
+              <option value="personal">Personal</option>
+            </select>
+          </label>
+        </div>
+        <textarea id="notes" spellcheck="true" aria-label="Raw notes"></textarea>
+        <div class="actions">
+          <button id="sample" type="button">Sample</button>
+          <button id="clear" type="button">Clear</button>
+        </div>
+      </section>
+
+      <section class="panel output-panel" aria-labelledby="output-title">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Generate</p>
+            <h2 id="output-title">Markdown handoff</h2>
+          </div>
+          <div class="actions">
+            <button id="copy" type="button" class="primary">Copy</button>
+            <button id="download" type="button">Download</button>
+          </div>
+        </div>
+        <textarea id="markdown" readonly aria-label="Generated Markdown handoff"></textarea>
+      </section>
+
+      <aside class="panel readiness" aria-label="Handoff readiness">
+        <div class="score-wrap">
+          <div id="score" class="score" style="--score: 0">0</div>
+          <div>
+            <p class="eyebrow">Readiness</p>
+            <p id="focus" class="focus">Paste notes to build a handoff.</p>
+          </div>
+        </div>
+        <ul id="stats" class="stats"></ul>
+        <h2>Gaps</h2>
+        <ul id="warnings" class="warnings"></ul>
+      </aside>
+
+      <section id="buckets" class="buckets" aria-label="Captured buckets"></section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "fun-20260525-b-handoff-card",
+  "version": "1.0.0",
+  "description": "Local-first handoff note formatter for messy work or study notes.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "check": "node scripts/check.mjs"
+  },
+  "keywords": [
+    "handoff",
+    "notes",
+    "productivity",
+    "local-first",
+    "markdown"
+  ],
+  "author": "bte808",
+  "license": "MIT"
+}
