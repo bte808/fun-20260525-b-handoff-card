@@ -8,19 +8,25 @@ Question: should the checklist include a PDF download?
 Reference: https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText
 Follow up with @mina after QA signs off.`;
 
+const TITLE_PREFIX = /^(goal|title|topic|project|目标|标题|主题|项目)\s*[:：]\s*/i;
+
 const SECTION_RULES = {
   actions: [
-    /\b(todo|to-do|action|next|follow up|follow-up|need to|needs to|must|should|fix|review|send|call|write|ship|check|verify|prepare)\b/i
+    /\b(todo|to-do|action|next|follow up|follow-up|need to|needs to|must|should|fix|review|send|call|write|ship|check|verify|prepare|assigned to)\b/i,
+    /(?:待办|行动项|下一步|需要|需|跟进|修复|检查|确认|发送|提交|安排|完成|处理|优化|上线|联系|准备|补充|复查)/
   ],
   decisions: [
-    /\b(decision|decided|agreed|settled|chose|chosen|approved|will use|we should keep|locked)\b/i
+    /\b(decision|decided|agreed|settled|chose|chosen|approved|will use|we should keep|locked)\b/i,
+    /(?:决定|已决定|同意|确认采用|通过|定为|采用|保留|批准|拍板|保持)/
   ],
   questions: [
-    /\?$/,
-    /\b(question|ask|confirm|clarify|should we|do we|can we|could we)\b/i
+    /[?？]\s*$/,
+    /\b(question|ask|confirm|clarify|should we|do we|can we|could we)\b/i,
+    /(?:问题|疑问|待确认|需确认|请确认|是否|吗[？?]?)/
   ],
   risks: [
-    /\b(blocker|blocked|risk|issue|concern|fails|failed|broken|unknown|waiting on|stuck|can't|cannot)\b/i
+    /\b(blocker|blocked|risk|issue|concern|fails|failed|broken|unknown|waiting on|stuck|can't|cannot)\b/i,
+    /(?:阻塞|卡住|风险|故障|失败|异常|未解决|待排查|无法|不能|有问题)/
   ]
 };
 
@@ -83,14 +89,14 @@ export function analyzeHandoff(rawInput, options = {}) {
 
 export function generateMarkdown(analysis) {
   const lines = [
-    `# ${analysis.title}`,
+    `# ${escapeMarkdownText(analysis.title)}`,
     "",
     `Generated: ${formatDate(analysis.createdAt)}`,
     `Mode: ${labelMode(analysis.mode)}`,
     `Handoff readiness: ${analysis.score}/100`,
     "",
     "## At a glance",
-    `- Focus: ${analysis.focus}`,
+    `- Focus: ${escapeMarkdownText(analysis.focus)}`,
     `- Actions: ${analysis.stats.actions}`,
     `- Decisions: ${analysis.stats.decisions}`,
     `- Open questions: ${analysis.stats.questions}`,
@@ -103,8 +109,8 @@ export function generateMarkdown(analysis) {
   appendSection(lines, "Action items", analysis.sections.actions, true);
   appendSection(lines, "Open questions", analysis.sections.questions);
   appendSection(lines, "Risks / blockers", analysis.sections.risks);
-  appendFlatSection(lines, "Links", analysis.links);
-  appendFlatSection(lines, "Gaps to clarify", analysis.warnings);
+  appendFlatSection(lines, "Links", analysis.links, formatLinkForMarkdown);
+  appendFlatSection(lines, "Gaps to clarify", analysis.warnings, escapeMarkdownText);
 
   return lines.join("\n").trim() + "\n";
 }
@@ -113,7 +119,7 @@ export function filenameFor(title, date = new Date()) {
   const day = date.toISOString().slice(0, 10);
   const slug = title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 48) || "handoff-card";
   return `${day}-${slug}.md`;
@@ -123,13 +129,12 @@ function normalizeLines(input = "") {
   return String(input)
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .map((line) => line.replace(/^[-*>\u2022]\s*/, ""))
-    .map((line) => line.replace(/^\[[ xX]\]\s*/, ""))
+    .map(stripListPrefix)
     .filter(Boolean);
 }
 
 function classifyLine(line) {
-  if (/^(goal|title|topic|project)\s*:/i.test(line)) return "context";
+  if (TITLE_PREFIX.test(line)) return "context";
   if (SECTION_RULES.risks.some((rule) => rule.test(line))) return "risks";
   if (SECTION_RULES.questions.some((rule) => rule.test(line))) return "questions";
   if (SECTION_RULES.decisions.some((rule) => rule.test(line))) return "decisions";
@@ -140,44 +145,60 @@ function classifyLine(line) {
 function enrichLine(text) {
   return {
     text,
-    owners: extractOwners(text),
-    dates: extractDates(text),
-    links: extractUrls(text)
+    owners: unique(extractOwners(text)),
+    dates: unique(extractDates(text)),
+    links: unique(extractUrls(text))
   };
 }
 
 function inferTitle(lines, mode) {
-  const explicit = lines.find((line) => /^(goal|title|topic|project)\s*:/i.test(line));
+  const explicit = lines.find((line) => TITLE_PREFIX.test(line));
   const source = explicit || lines[0] || `${labelMode(mode)} handoff`;
   return source
-    .replace(/^(goal|title|topic|project)\s*:\s*/i, "")
+    .replace(TITLE_PREFIX, "")
     .replace(/[.?!]\s*$/, "")
     .slice(0, 90);
 }
 
 function extractUrls(text) {
-  const matches = text.match(/https?:\/\/[^\s)]+/gi) || [];
-  return matches.map((url) => url.replace(/[.,;:!?]+$/, ""));
+  const matches = text.match(
+    /(?:https?:\/\/|www\.)[^\s<>()]+|\b[a-z0-9.-]+\.(?:com|org|net|io|ai|app|dev|cn|co|me|edu)(?:\/[^\s<>()]*)?/gi
+  ) || [];
+  return matches.map(normalizeUrl).filter(Boolean);
 }
 
 function extractOwners(text) {
   const owners = [];
-  const atMatches = text.matchAll(/@([a-z0-9._-]+)/gi);
+  const atMatches = text.matchAll(/@([\p{L}\p{N}._-]+)/gu);
   for (const match of atMatches) owners.push(`@${match[1]}`);
 
-  const ownerMatch = text.match(/\b(owner|assignee|负责)\s*:\s*([^,;]+)/i);
-  if (ownerMatch) owners.push(ownerMatch[2].trim());
+  for (const pattern of [
+    /\b(?:owner|assignee)\s*[:：-]\s*([^,;，。]+)/giu,
+    /(?:负责人|跟进人|对接人)\s*[:：-]\s*([^,;，。]+)/gu,
+    /\bassigned to\s+([^,;，。]+)/giu,
+    /(?:由|请)\s*([@\p{L}\p{N}._-]+)\s*(?:负责|跟进|处理)/gu
+  ]) {
+    const matches = text.matchAll(pattern);
+    for (const match of matches) owners.push(cleanOwner(match[1]));
+  }
   return owners;
 }
 
 function extractDates(text) {
   const patterns = [
     /\b\d{4}-\d{2}-\d{2}\b/g,
+    /\d{4}年\d{1,2}月\d{1,2}日/g,
+    /\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b/g,
     /\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/g,
+    /\b\d{1,2}月\d{1,2}日\b/g,
     /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?:day)?\b(?:\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?)?/gi,
+    /(?:本周|下周)[一二三四五六日天]/g,
+    /(?:周|星期)[一二三四五六日天](?:\s*\d{1,2}(?::|：)\d{2})?/g,
     /\b(?:today|tomorrow|tonight|eod|eow|next week|this week)\b/gi,
+    /(?:今天|明天|后天|今晚|本周|下周|本月底|月底)/g,
     /\bby\s+[A-Za-z]{3,9}\s*\d{0,2}(?::\d{2})?\s*(?:am|pm)?/gi,
-    /\bdue\s+[^,;.]+/gi
+    /\bdue\s+[^,;.]+/gi,
+    /(?:截止|截至|最晚|deadline)\s*[:：]?\s*[^,;.，。]+/giu
   ];
   return patterns.flatMap((pattern) => text.match(pattern) || []).map((value) => value.trim());
 }
@@ -231,21 +252,21 @@ function appendSection(output, title, items, checklist = false) {
   } else {
     for (const item of items) {
       const meta = [];
-      if (item.owners.length) meta.push(`Owner: ${item.owners.join(", ")}`);
-      if (item.dates.length) meta.push(`Date: ${item.dates.join(", ")}`);
+      if (item.owners.length) meta.push(`Owner: ${item.owners.map(escapeMarkdownText).join(", ")}`);
+      if (item.dates.length) meta.push(`Date: ${item.dates.map(escapeMarkdownText).join(", ")}`);
       const suffix = meta.length ? ` (${meta.join("; ")})` : "";
-      output.push(`${checklist ? "- [ ]" : "-"} ${item.text}${suffix}`);
+      output.push(`${checklist ? "- [ ]" : "-"} ${escapeMarkdownText(item.text)}${suffix}`);
     }
   }
   output.push("");
 }
 
-function appendFlatSection(output, title, items) {
+function appendFlatSection(output, title, items, formatter = escapeMarkdownText) {
   output.push(`## ${title}`);
   if (!items.length) {
     output.push("- None captured.");
   } else {
-    for (const item of items) output.push(`- ${item}`);
+    for (const item of items) output.push(`- ${formatter(item)}`);
   }
   output.push("");
 }
@@ -266,4 +287,44 @@ function labelMode(mode) {
 
 function unique(values) {
   return [...new Set(values.filter(Boolean))];
+}
+
+function stripListPrefix(line) {
+  return line
+    .replace(/^[-*>\u2022]\s*/, "")
+    .replace(/^\[[ xX]\]\s*/, "")
+    .replace(/^\d+[.)]\s*/, "")
+    .replace(/^[（(]?\d+[）)]\s*/, "")
+    .replace(/^[一二三四五六七八九十]+[、.)]\s*/, "");
+}
+
+function normalizeUrl(url) {
+  const clean = url.replace(/[.,;:!?]+$/, "");
+  if (!clean) return "";
+  return /^(?:https?:)?\/\//i.test(clean) ? clean : `https://${clean}`;
+}
+
+function cleanOwner(value = "") {
+  const clean = value.trim().replace(/[.,;，。]+$/, "");
+  const tagged = clean.match(/@[\p{L}\p{N}._-]+/u);
+  if (tagged) return tagged[0];
+  return clean
+    .replace(/\s+(?:by|due|before|on|today|tomorrow|tonight|eod|eow|next week|this week)\b.*$/iu, "")
+    .replace(/\s+(?:周|星期|本周|下周|今天|明天|后天|今晚|截止|截至|最晚|\d{4}[年/-]|\d{1,2}[月/]).*$/u, "")
+    .replace(/\s+(?:review|fix|send|check|prepare|跟进|处理|修复|确认|发送|完成)\b.*$/iu, "")
+    .trim();
+}
+
+function formatLinkForMarkdown(url) {
+  return `<${url}>`;
+}
+
+function escapeMarkdownText(value = "") {
+  return String(value)
+    .replace(/\\/g, "\\\\")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/([`*_{}\[\]()#+!|])/g, "\\$1")
+    .replace(/^(\s*)([-+])/gm, "$1\\$2")
+    .replace(/^(\s*)(\d+)\./gm, "$1$2\\.");
 }

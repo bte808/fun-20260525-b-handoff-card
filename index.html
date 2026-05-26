@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Handoff Card</title>
-    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./styles.css?v=handoff-card-20260526">
   </head>
   <body>
     <header class="topbar">
@@ -12,7 +12,7 @@
         <p class="eyebrow">Local-first utility</p>
         <h1>Handoff Card</h1>
       </div>
-      <p id="status" aria-live="polite">Local only. Nothing leaves this browser.</p>
+      <p id="status" role="status" aria-live="polite" aria-atomic="true">Local only. Nothing leaves this browser.</p>
     </header>
 
     <main class="workspace">
@@ -49,7 +49,8 @@
             <button id="download" type="button">Download</button>
           </div>
         </div>
-        <textarea id="markdown" readonly aria-label="Generated Markdown handoff"></textarea>
+        <textarea id="markdown" readonly aria-label="Generated Markdown handoff" aria-describedby="manual-help"></textarea>
+        <p id="manual-help" class="manual-help" hidden></p>
       </section>
 
       <aside class="panel readiness" aria-label="Handoff readiness">
@@ -68,6 +69,6 @@
       <section id="buckets" class="buckets" aria-label="Captured buckets"></section>
     </main>
 
-    <script type="module" src="./app.js"></script>
+    <script type="module" src="./app.js?v=handoff-card-20260526"></script>
   </body>
 </html>

@@ -16,9 +16,11 @@ for (const file of requiredFiles) {
 }
 
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
-assert.match(html, /<script type="module" src="\.\/app\.js"><\/script>/);
+assert.match(html, /<script type="module" src="\.\/app\.js\?v=handoff-card-\d{8}"><\/script>/);
+assert.match(html, /<link rel="stylesheet" href="\.\/styles\.css\?v=handoff-card-\d{8}">/);
 assert.match(html, /id="notes"/);
 assert.match(html, /id="markdown"/);
+assert.match(html, /id="manual-help"/);
 assert.doesNotMatch(html, /https:\/\/cdn|node_modules|apiKey|token/i);
 
 const analysis = analyzeHandoff(SAMPLE_NOTES, { now: "2026-05-25T10:00:00Z" });

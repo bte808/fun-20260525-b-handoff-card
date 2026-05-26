@@ -14,6 +14,7 @@ const focus = document.querySelector("#focus");
 const stats = document.querySelector("#stats");
 const buckets = document.querySelector("#buckets");
 const warnings = document.querySelector("#warnings");
+const manualHelp = document.querySelector("#manual-help");
 const copyButton = document.querySelector("#copy");
 const downloadButton = document.querySelector("#download");
 const sampleButton = document.querySelector("#sample");
@@ -27,6 +28,7 @@ function render() {
   currentAnalysis = analyzeHandoff(input.value, { mode: mode.value });
   currentMarkdown = generateMarkdown(currentAnalysis);
   output.value = currentMarkdown;
+  setManualHelp("");
   score.textContent = `${currentAnalysis.score}`;
   score.style.setProperty("--score", currentAnalysis.score);
   focus.textContent = currentAnalysis.focus;
@@ -78,24 +80,43 @@ function renderWarnings(items) {
 async function copyMarkdown() {
   try {
     await navigator.clipboard.writeText(currentMarkdown);
+    setManualHelp("");
     setStatus("Markdown copied.");
   } catch {
     output.focus();
     output.select();
-    document.execCommand("copy");
-    setStatus("Clipboard blocked; Markdown selected.");
+    const copied = typeof document.execCommand === "function" && document.execCommand("copy");
+    setManualHelp(copied
+      ? ""
+      : "Clipboard access is unavailable here. The Markdown is selected, so you can press Cmd+C to copy it manually.");
+    setStatus(copied ? "Clipboard fallback used." : "Clipboard blocked; Markdown selected.");
   }
 }
 
 function downloadMarkdown() {
-  const blob = new Blob([currentMarkdown], { type: "text/markdown;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filenameFor(currentAnalysis.title);
-  link.click();
-  URL.revokeObjectURL(url);
-  setStatus("Markdown file prepared.");
+  try {
+    if (typeof URL.createObjectURL !== "function") {
+      throw new Error("download-unsupported");
+    }
+    const blob = new Blob([currentMarkdown], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filenameFor(currentAnalysis?.title || "handoff-card");
+    link.style.display = "none";
+    document.body.append(link);
+    link.click();
+    // Delay cleanup so WebKit/Safari has time to start the download.
+    window.setTimeout(() => {
+      URL.revokeObjectURL(url);
+      link.remove();
+    }, 1000);
+    setManualHelp("");
+    setStatus("Markdown file prepared.");
+  } catch {
+    setManualHelp("Download is unavailable in this browser. Use Copy, or select the Markdown and save it manually.");
+    setStatus("Download failed in this browser.");
+  }
 }
 
 function setStatus(message) {
@@ -104,6 +125,11 @@ function setStatus(message) {
   setStatus.timer = window.setTimeout(() => {
     status.textContent = "Local only. Nothing leaves this browser.";
   }, 2400);
+}
+
+function setManualHelp(message) {
+  manualHelp.hidden = !message;
+  manualHelp.textContent = message;
 }
 
 function escapeHtml(value) {

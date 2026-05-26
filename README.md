@@ -11,11 +11,11 @@ This is intentionally much smaller: no account, no LLM, no cloud storage, and no
 ## What it can do
 
 - Paste messy notes and classify lines into context, decisions, action items, questions, and risks.
-- Extract owners, dates, and links.
+- Extract owners, dates, and links from English or Chinese notes, including bare links such as `www.example.com/spec`.
 - Calculate a simple handoff readiness score.
 - Show missing gaps such as no owner, no deadline, or no explicit next action.
 - Generate Markdown that can be copied into chat, docs, issues, or a study log.
-- Download the generated Markdown as a local file.
+- Download the generated Markdown as a local file, with an inline manual-copy hint when clipboard or download APIs are blocked.
 - Run fully in the browser with no secrets or private services.
 
 ## How to run
@@ -55,4 +55,4 @@ The app is dependency-free. The tests use Node's built-in test runner.
 - Add a user-editable keyword list.
 - Export issue templates for GitHub, Linear, and Notion.
 - Add a browser `FileReader` import for `.txt` and `.md` files.
-- Add language presets for Chinese/Japanese notes.
+- Import a small team glossary for custom action and risk words.
