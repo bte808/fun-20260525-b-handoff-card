@@ -1,8 +1,9 @@
 import {
-  SAMPLE_NOTES,
+  SAMPLE_LIBRARY,
   analyzeHandoff,
   filenameFor,
-  generateMarkdown
+  generateMarkdown,
+  sampleForMode
 } from "./src/handoffCard.mjs";
 
 const input = document.querySelector("#notes");
@@ -17,10 +18,10 @@ const warnings = document.querySelector("#warnings");
 const manualHelp = document.querySelector("#manual-help");
 const copyButton = document.querySelector("#copy");
 const downloadButton = document.querySelector("#download");
-const sampleButton = document.querySelector("#sample");
+const sampleButtons = document.querySelectorAll("[data-sample]");
 const clearButton = document.querySelector("#clear");
 
-input.value = SAMPLE_NOTES;
+input.value = sampleForMode(mode.value);
 let currentMarkdown = "";
 let currentAnalysis = null;
 
@@ -32,6 +33,7 @@ function render() {
   score.textContent = `${currentAnalysis.score}`;
   score.style.setProperty("--score", currentAnalysis.score);
   focus.textContent = currentAnalysis.focus;
+  updateSampleButtons();
   stats.innerHTML = "";
   for (const item of [
     ["Actions", currentAnalysis.stats.actions],
@@ -47,6 +49,12 @@ function render() {
   }
   renderBuckets(currentAnalysis);
   renderWarnings(currentAnalysis.warnings);
+}
+
+function updateSampleButtons() {
+  for (const button of sampleButtons) {
+    button.setAttribute("aria-pressed", String(button.dataset.sample === mode.value));
+  }
 }
 
 function renderBuckets(analysis) {
@@ -143,14 +151,25 @@ function escapeHtml(value) {
 }
 
 input.addEventListener("input", render);
-mode.addEventListener("change", render);
+mode.addEventListener("change", () => {
+  render();
+  setStatus(`${sampleLabelForMode(mode.value)} mode selected.`);
+});
 copyButton.addEventListener("click", copyMarkdown);
 downloadButton.addEventListener("click", downloadMarkdown);
-sampleButton.addEventListener("click", () => {
-  input.value = SAMPLE_NOTES;
-  render();
-  setStatus("Sample restored.");
-});
+for (const button of sampleButtons) {
+  button.addEventListener("click", () => {
+    const sampleMode = button.dataset.sample || "work";
+    mode.value = sampleMode;
+    input.value = sampleForMode(sampleMode);
+    render();
+    input.focus();
+    setStatus(`${sampleLabelForMode(sampleMode)} sample loaded.`);
+  });
+}
+function sampleLabelForMode(sampleMode) {
+  return SAMPLE_LIBRARY[sampleMode]?.label || "Work";
+}
 clearButton.addEventListener("click", () => {
   input.value = "";
   render();

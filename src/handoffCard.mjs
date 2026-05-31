@@ -1,4 +1,7 @@
-export const SAMPLE_NOTES = `Goal: ship the onboarding checklist before Friday demo.
+export const SAMPLE_LIBRARY = {
+  work: {
+    label: "Work",
+    notes: `Goal: ship the onboarding checklist before Friday demo.
 
 10:15 Sarah agreed we should keep the first release local-only and avoid login.
 TODO @lee review the copy and send the final wording by Thu 4pm.
@@ -6,7 +9,37 @@ Need to check mobile layout on 390px wide screens.
 Blocker: export button fails in Safari private mode.
 Question: should the checklist include a PDF download?
 Reference: https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText
-Follow up with @mina after QA signs off.`;
+Follow up with @mina after QA signs off.`
+  },
+  study: {
+    label: "Study",
+    notes: `Topic: measurement circuits quiz review.
+
+Decision: start with bridge amplifier examples before the sensor chapter.
+TODO @li build 12 formula flashcards by Sunday 20:00.
+Need to compare slide 18 with the lab note calculation.
+Question: which uncertainty formula needs a derivation proof?
+Risk: the old lab data table still has missing units.
+Reference: https://example.com/measurement-review`
+  },
+  personal: {
+    label: "Personal",
+    notes: `Goal: weekend apartment handoff.
+
+Decided: keep the spare keys with Alex until Sunday.
+TODO @me photograph meter readings by 2026-05-31.
+Need to message the cleaner before noon.
+Question: does the landlord need the parking card returned?
+Risk: the deposit receipt is still in old email.
+Reference: www.example.com/move-checklist`
+  }
+};
+
+export const SAMPLE_NOTES = SAMPLE_LIBRARY.work.notes;
+
+export function sampleForMode(mode = "work") {
+  return SAMPLE_LIBRARY[mode]?.notes || SAMPLE_NOTES;
+}
 
 const TITLE_PREFIX = /^(goal|title|topic|project|目标|标题|主题|项目)\s*[:：]\s*/i;
 

@@ -2,6 +2,8 @@
 
 Handoff Card is a local-first web tool that turns messy notes into a copy-ready Markdown handoff. Paste raw meeting, study, or project notes, choose a mode, and it buckets the text into context, decisions, actions, questions, risks, links, and gaps.
 
+Live demo: https://bte808.github.io/fun-20260525-b-handoff-card/
+
 ## Why it exists
 
 Small notes lose value when they are not shaped before the next person, next study session, or next AI/tool handoff sees them. This project was inspired by recent public discussion around local note organization, especially the 2026-05-24 Show HN post about a local note engine for organizing notes into a knowledge graph: https://news.ycombinator.com/item?id=48261533
@@ -11,6 +13,7 @@ This is intentionally much smaller: no account, no LLM, no cloud storage, and no
 ## What it can do
 
 - Paste messy notes and classify lines into context, decisions, action items, questions, and risks.
+- Start from Work, Study, or Personal sample notes when you want to see the output shape quickly.
 - Extract owners, dates, and links from English or Chinese notes, including bare links such as `www.example.com/spec`.
 - Calculate a simple handoff readiness score.
 - Show missing gaps such as no owner, no deadline, or no explicit next action.

@@ -207,6 +207,12 @@ button:hover {
   border-color: var(--accent);
 }
 
+button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: #e8f4f1;
+  color: var(--accent-strong);
+}
+
 button:focus-visible,
 select:focus-visible,
 textarea:focus-visible {

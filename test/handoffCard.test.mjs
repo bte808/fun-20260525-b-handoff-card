@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  SAMPLE_LIBRARY,
   SAMPLE_NOTES,
   analyzeHandoff,
   filenameFor,
-  generateMarkdown
+  generateMarkdown,
+  sampleForMode
 } from "../src/handoffCard.mjs";
 
 const BILINGUAL_NOTES = `目标：发布双语交接卡修复
@@ -95,5 +97,22 @@ Need to preserve > quote text and 1. literal numbering.`, {
   it("keeps bilingual titles usable in filenames", () => {
     const name = filenameFor("发布 双语 handoff 修复", new Date("2026-05-25T00:00:00Z"));
     assert.equal(name, "2026-05-25-发布-双语-handoff-修复.md");
+  });
+
+  it("offers useful sample notes for every mode", () => {
+    assert.equal(sampleForMode("unknown"), SAMPLE_NOTES);
+
+    for (const [mode, sample] of Object.entries(SAMPLE_LIBRARY)) {
+      const analysis = analyzeHandoff(sample.notes, {
+        mode,
+        now: "2026-05-25T10:00:00Z"
+      });
+
+      assert.ok(sample.label);
+      assert.ok(analysis.stats.actions >= 1);
+      assert.ok(analysis.stats.questions >= 1);
+      assert.ok(analysis.stats.risks >= 1);
+      assert.ok(analysis.links.length >= 1);
+    }
   });
 });

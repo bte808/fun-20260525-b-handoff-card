@@ -3,8 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Local-first Markdown handoff card generator for work, study, and personal notes.">
     <title>Handoff Card</title>
-    <link rel="stylesheet" href="./styles.css?v=handoff-card-20260526">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b6b63'/%3E%3Cpath d='M16 18h32v6H16zm0 12h24v6H16zm0 12h30v6H16z' fill='white'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="./styles.css?v=handoff-card-20260531">
   </head>
   <body>
     <header class="topbar">
@@ -32,8 +34,10 @@
           </label>
         </div>
         <textarea id="notes" spellcheck="true" aria-label="Raw notes"></textarea>
-        <div class="actions">
-          <button id="sample" type="button">Sample</button>
+        <div class="actions sample-actions" aria-label="Load sample notes">
+          <button type="button" data-sample="work">Work sample</button>
+          <button type="button" data-sample="study">Study sample</button>
+          <button type="button" data-sample="personal">Personal sample</button>
           <button id="clear" type="button">Clear</button>
         </div>
       </section>
@@ -69,6 +73,6 @@
       <section id="buckets" class="buckets" aria-label="Captured buckets"></section>
     </main>
 
-    <script type="module" src="./app.js?v=handoff-card-20260526"></script>
+    <script type="module" src="./app.js?v=handoff-card-20260531"></script>
   </body>
 </html>
