@@ -148,6 +148,27 @@ export function generateMarkdown(analysis) {
   return lines.join("\n").trim() + "\n";
 }
 
+export function generateShareCard(analysis, options = {}) {
+  const demoUrl = options.demoUrl || "https://bte808.github.io/fun-20260525-b-handoff-card/";
+  const nextAction = firstLine(analysis.sections.actions, "Add one clear next action before sharing.");
+  const topGap = firstLine(analysis.warnings, "Ready to share.");
+  const summary = [
+    `${analysis.score}/100 readiness`,
+    countLabel(analysis.stats.actions, "action"),
+    countLabel(analysis.stats.decisions, "decision"),
+    countLabel(analysis.stats.questions, "question"),
+    countLabel(analysis.stats.risks, "risk")
+  ].join(" · ");
+
+  return [
+    `Handoff Card: ${oneLine(analysis.title)}`,
+    `${labelMode(analysis.mode)} · ${summary}`,
+    `Next: ${oneLine(nextAction)}`,
+    `Gap: ${oneLine(topGap)}`,
+    `Try it: ${demoUrl}`
+  ].join("\n");
+}
+
 export function filenameFor(title, date = new Date()) {
   const day = date.toISOString().slice(0, 10);
   const slug = title
@@ -302,6 +323,20 @@ function appendFlatSection(output, title, items, formatter = escapeMarkdownText)
     for (const item of items) output.push(`- ${formatter(item)}`);
   }
   output.push("");
+}
+
+function firstLine(items, fallback) {
+  const first = Array.isArray(items) ? items[0] : "";
+  if (typeof first === "string") return first || fallback;
+  return first?.text || fallback;
+}
+
+function oneLine(value = "") {
+  return String(value).replace(/\s+/g, " ").trim();
+}
+
+function countLabel(count, singular) {
+  return `${count} ${singular}${count === 1 ? "" : "s"}`;
 }
 
 function formatDate(value) {

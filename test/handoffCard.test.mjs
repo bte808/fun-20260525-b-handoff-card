@@ -6,6 +6,7 @@ import {
   analyzeHandoff,
   filenameFor,
   generateMarkdown,
+  generateShareCard,
   sampleForMode
 } from "../src/handoffCard.mjs";
 
@@ -45,6 +46,21 @@ describe("handoff card analysis", () => {
     assert.match(markdown, /## Action items/);
     assert.match(markdown, /- \[ \] TODO @lee review/);
     assert.match(markdown, /## Gaps to clarify/);
+  });
+
+  it("generates a concise share card without dumping all notes", () => {
+    const analysis = analyzeHandoff(SAMPLE_NOTES, {
+      now: "2026-05-25T10:00:00Z"
+    });
+    const card = generateShareCard(analysis, {
+      demoUrl: "https://example.test/handoff"
+    });
+
+    assert.match(card, /^Handoff Card:/);
+    assert.match(card, /readiness/);
+    assert.match(card, /Next:/);
+    assert.match(card, /Try it: https:\/\/example\.test\/handoff/);
+    assert.doesNotMatch(card, /## Action items/);
   });
 
   it("surfaces gaps for blank notes", () => {

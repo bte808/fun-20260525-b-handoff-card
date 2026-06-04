@@ -18,8 +18,13 @@ This is intentionally much smaller: no account, no LLM, no cloud storage, and no
 - Calculate a simple handoff readiness score.
 - Show missing gaps such as no owner, no deadline, or no explicit next action.
 - Generate Markdown that can be copied into chat, docs, issues, or a study log.
+- Generate a short share card with readiness, counts, the next action, the top gap, and the live demo URL.
 - Download the generated Markdown as a local file, with an inline manual-copy hint when clipboard or download APIs are blocked.
 - Run fully in the browser with no secrets or private services.
+
+## 2026-06-04 Maintenance Update
+
+This pass adds **Copy share**. It copies a compact handoff summary without dumping the full private note body, so the user can share readiness, the next move, the top gap, and the demo link in chat before sending the complete Markdown handoff.
 
 ## How to run
 
@@ -40,7 +45,7 @@ http://localhost:5185
 1. Paste raw notes or use the included sample.
 2. Pick Work, Study, or Personal mode.
 3. Review the readiness score and extracted buckets.
-4. Copy or download the Markdown handoff.
+4. Copy a short share card, or copy/download the complete Markdown handoff.
 
 ## Validation
 

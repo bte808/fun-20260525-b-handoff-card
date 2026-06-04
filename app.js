@@ -3,6 +3,7 @@ import {
   analyzeHandoff,
   filenameFor,
   generateMarkdown,
+  generateShareCard,
   sampleForMode
 } from "./src/handoffCard.mjs";
 
@@ -17,17 +18,20 @@ const buckets = document.querySelector("#buckets");
 const warnings = document.querySelector("#warnings");
 const manualHelp = document.querySelector("#manual-help");
 const copyButton = document.querySelector("#copy");
+const shareButton = document.querySelector("#copy-share");
 const downloadButton = document.querySelector("#download");
 const sampleButtons = document.querySelectorAll("[data-sample]");
 const clearButton = document.querySelector("#clear");
 
 input.value = sampleForMode(mode.value);
 let currentMarkdown = "";
+let currentShareCard = "";
 let currentAnalysis = null;
 
 function render() {
   currentAnalysis = analyzeHandoff(input.value, { mode: mode.value });
   currentMarkdown = generateMarkdown(currentAnalysis);
+  currentShareCard = generateShareCard(currentAnalysis);
   output.value = currentMarkdown;
   setManualHelp("");
   score.textContent = `${currentAnalysis.score}`;
@@ -85,20 +89,30 @@ function renderWarnings(items) {
   }
 }
 
-async function copyMarkdown() {
+async function copyText(text, successMessage, blockedMessage) {
   try {
-    await navigator.clipboard.writeText(currentMarkdown);
+    await navigator.clipboard.writeText(text);
     setManualHelp("");
-    setStatus("Markdown copied.");
+    setStatus(successMessage);
   } catch {
+    output.value = text;
     output.focus();
     output.select();
     const copied = typeof document.execCommand === "function" && document.execCommand("copy");
     setManualHelp(copied
       ? ""
-      : "Clipboard access is unavailable here. The Markdown is selected, so you can press Cmd+C to copy it manually.");
-    setStatus(copied ? "Clipboard fallback used." : "Clipboard blocked; Markdown selected.");
+      : `${blockedMessage} is selected, so you can press Cmd+C to copy it manually.`);
+    setStatus(copied ? "Clipboard fallback used." : `Clipboard blocked; ${blockedMessage} selected.`);
   }
+}
+
+async function copyMarkdown() {
+  output.value = currentMarkdown;
+  await copyText(currentMarkdown, "Markdown copied.", "The Markdown");
+}
+
+async function copyShareCard() {
+  await copyText(currentShareCard, "Share card copied.", "The share card");
 }
 
 function downloadMarkdown() {
@@ -156,6 +170,7 @@ mode.addEventListener("change", () => {
   setStatus(`${sampleLabelForMode(mode.value)} mode selected.`);
 });
 copyButton.addEventListener("click", copyMarkdown);
+shareButton.addEventListener("click", copyShareCard);
 downloadButton.addEventListener("click", downloadMarkdown);
 for (const button of sampleButtons) {
   button.addEventListener("click", () => {

@@ -21,6 +21,7 @@ assert.match(html, /<link rel="stylesheet" href="\.\/styles\.css\?v=handoff-card
 assert.match(html, /id="notes"/);
 assert.match(html, /id="markdown"/);
 assert.match(html, /id="manual-help"/);
+assert.match(html, /id="copy-share"/);
 assert.doesNotMatch(html, /https:\/\/cdn|node_modules|apiKey|token/i);
 
 const analysis = analyzeHandoff(SAMPLE_NOTES, { now: "2026-05-25T10:00:00Z" });
